@@ -46,6 +46,16 @@ a{color:inherit}
 header,main,footer{position:relative;z-index:2}
 header{display:flex;justify-content:space-between;align-items:center;padding:22px 5vw}
 header img{height:50px;width:auto}
+.hdr-r{display:flex;align-items:center;gap:22px}
+.snd{display:inline-flex;align-items:center;gap:.6em;font:800 .9rem var(--body);color:var(--gig);background:transparent;border:2px solid var(--gig);border-radius:999px;padding:.5em 1em;cursor:pointer;transition:background .2s,color .2s}
+.snd:hover{background:rgba(254,205,4,.12)}
+.snd[aria-pressed="true"]{background:var(--gig);color:var(--ink)}
+.snd .bars{display:inline-flex;align-items:flex-end;gap:2px;height:14px}
+.snd .bars i{width:3px;height:30%;background:currentColor;border-radius:2px}
+.snd[aria-pressed="true"] .bars i{animation:sb .9s ease-in-out infinite alternate}
+.snd .bars i:nth-child(2){animation-delay:-.3s}.snd .bars i:nth-child(3){animation-delay:-.6s}.snd .bars i:nth-child(4){animation-delay:-.15s}
+@keyframes sb{from{height:20%}to{height:100%}}
+@media (max-width:640px){.snd .t{display:none}.hdr-r{gap:14px}}
 .handle{font-weight:800;text-decoration:none;color:var(--gig);border-bottom:3px solid var(--gig);padding-bottom:2px}
 main{flex:1;display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:4vw;padding:2vh 5vw 6vh;max-width:1320px;width:100%;margin:0 auto}
 
@@ -119,7 +129,12 @@ footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;paddin
 
 <header>
   <img src="logo.webp" alt="GigEka" width="74" height="50">
-  <a class="handle" href="https://instagram.com/gigeka.lk" target="_blank" rel="noopener">@gigeka.lk</a>
+  <div class="hdr-r">
+    <button class="snd" id="snd" type="button" aria-pressed="false" aria-label="Turn sound on">
+      <span class="bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="t">Sound off</span>
+    </button>
+    <a class="handle" href="https://instagram.com/gigeka.lk" target="_blank" rel="noopener">@gigeka.lk</a>
+  </div>
 </header>
 
 <main>
@@ -169,6 +184,247 @@ const eq = document.getElementById('eq');
 const N = innerWidth < 700 ? 24 : 56;
 const bars = Array.from({length:N}, () => eq.appendChild(document.createElement('i')));
 
+/* ---------------------------------------------------------------
+   SOUND — an original Sri Lankan folk-fusion groove, composed in
+   code and rendered in the browser (no audio files):
+   geta bera + thammattama hand drums, raban rolls, a boom-bap kit,
+   a drone, a horanewa-style shawm lead and a bansuri-style echo.
+   The track is rendered once, then played through a "turntable"
+   that follows the record exactly: faster spin = faster & higher,
+   backwards = the music plays in reverse, hand still = silence.
+   Browsers only allow audio after a tap/click, so it starts on
+   the Sound button or the first time someone grabs the record.
+---------------------------------------------------------------- */
+const Sound = (() => {
+  const btn = document.getElementById('snd');
+  let ctx = null, on = false, userMuted = false, ready = false, loading = null;
+  let master, musicGain, deckNode, rateParam, fallback = null, scratchGain, scratchBP;
+  let lastRate = 1, song = null;
+  const SR = 44100;
+  // the track renders quietly in the background after page load (no click needed for that)
+  const prerender = () => song || (song = renderSong(SR));
+  addEventListener('load', () => setTimeout(prerender, 1200));
+
+  const BPM = 98, S = 60 / BPM / 4, BARS = 16, LOOP = BARS * 16 * S;
+  const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+
+  /* ---------- composition (original) ---------- */
+  // 4-bar cycle of roots (D mixolydian feel): D D C G
+  const ROOTS = [38, 38, 36, 43];
+  const RIFF = [[0, 3, 0], [3, 2, 0], [6, 2, 7], [8, 2, 12], [10, 2, 7], [12, 2, 0], [14, 2, 7]]; // step, len, semitones
+  const A = [ // phrase A: [step, len, midi] over 4 bars
+    [0,2,81],[2,2,79],[4,4,78],[8,2,76],[10,2,78],[12,4,74],
+    [20,2,76],[22,2,78],[24,4,81],[28,4,79],
+    [32,2,79],[34,2,78],[36,4,76],[40,2,72],[42,2,74],[44,4,76],
+    [48,4,74],[52,2,71],[54,2,74],[56,8,74]
+  ];
+  const B = [ // phrase B: higher answer
+    [0,2,86],[2,2,84],[4,2,83],[6,2,81],[8,4,83],[12,4,81],
+    [16,2,79],[18,2,81],[20,4,83],[24,8,81],
+    [32,2,84],[34,2,83],[36,2,81],[38,2,79],[40,4,78],[44,4,76],
+    [48,2,79],[50,2,78],[52,2,76],[54,2,74],[56,8,74]
+  ];
+  const KICK = [0, 7, 10], SNARE = [4, 12], DHOM = [0, 3, 6, 8, 11, 14], THA = [2, 5, 9, 13, 15];
+
+  function renderSong(sr) {
+    const TAIL = 2.5;
+    const c = new OfflineAudioContext(2, Math.ceil((LOOP + TAIL) * sr), sr);
+    const out = c.createGain(); out.gain.value = .7;
+    const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 10000;
+    const comp = c.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 3; comp.attack.value = .005; comp.release.value = .15;
+    out.connect(lp).connect(comp).connect(c.destination);
+
+    const nb = c.createBuffer(1, sr, sr), nd = nb.getChannelData(0);
+    for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+    const pan = p => { const n = c.createStereoPanner(); n.pan.value = p; n.connect(out); return n; };
+    const busL = pan(-.28), busR = pan(.3), busC = pan(0), busLead = pan(.08), busEcho = pan(-.18);
+
+    // echo send for the leads
+    const dl = c.createDelay(1); dl.delayTime.value = S * 3; const fb = c.createGain(); fb.gain.value = .32;
+    const dlf = c.createBiquadFilter(); dlf.type = 'lowpass'; dlf.frequency.value = 2600;
+    dl.connect(dlf).connect(fb).connect(dl); dlf.connect(busEcho);
+    const send = c.createGain(); send.gain.value = .35; send.connect(dl);
+
+    function tone(type, f0, f1, t, dur, vol, dest, glide = .1) {
+      const o = c.createOscillator(), g = c.createGain(); o.type = type;
+      o.frequency.setValueAtTime(f0, t); if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t + glide);
+      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+      o.connect(g).connect(dest); o.start(t); o.stop(t + dur + .02);
+    }
+    function noise(t, dur, vol, type, f, q, dest) {
+      const s = c.createBufferSource(); s.buffer = nb; const fl = c.createBiquadFilter();
+      fl.type = type; fl.frequency.value = f; fl.Q.value = q; const g = c.createGain();
+      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+      s.connect(fl).connect(g).connect(dest); s.start(t, Math.random() * .5); s.stop(t + dur + .02);
+    }
+    const kick = (t, v = 1) => { tone('sine', 155, 44, t, .38, .95 * v, busC, .11); noise(t, .02, .3 * v, 'highpass', 3000, .7, busC); };
+    const snare = t => { noise(t, .2, .55, 'bandpass', 1900, .8, busC); tone('triangle', 200, 170, t, .12, .28, busC);
+      [0, .011, .023].forEach(d => noise(t + d, .07, .28, 'bandpass', 1400, 1.4, busC)); };
+    const hat = (t, v) => noise(t, .045, .16 * v, 'highpass', 8200, .8, busR);
+    const dhom = (t, v = 1) => { tone('sine', 128, 96, t, .4, .6 * v, busL, .18); noise(t, .05, .25 * v, 'lowpass', 500, .8, busL); };
+    const tha = (t, v = 1) => { noise(t, .075, .55 * v, 'bandpass', 1150, 1.6, busL); tone('triangle', 350, 320, t, .06, .2 * v, busL, .05); };
+    const tham = (t, v = 1) => { tone('sine', 640, 560, t, .09, .32 * v, busR, .05); noise(t, .025, .3 * v, 'bandpass', 3200, 2, busR); };
+    const raban = (t, v = 1) => { tone('sine', 230, 185, t, .13, .3 * v, busR, .08); noise(t, .05, .22 * v, 'bandpass', 950, 1.2, busR); };
+
+    // drone: D + A, slowly breathing filter
+    (() => {
+      const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 650; f.Q.value = 2;
+      const lfo = c.createOscillator(); lfo.frequency.value = .09; const lg = c.createGain(); lg.gain.value = 280; lfo.connect(lg).connect(f.frequency);
+      const g = c.createGain(); g.gain.value = .055; f.connect(g).connect(busC);
+      [mtof(50), mtof(57), mtof(50) * 1.003].forEach(fr => { const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.value = fr; o.connect(f); o.start(0); o.stop(LOOP + 2.5); });
+      lfo.start(0); lfo.stop(LOOP + 2.5);
+    })();
+
+    // a gliding lead voice (horanewa = nasal shawm, bansuri = breathy flute)
+    function lead(notes, offsetStep, transpose, kind) {
+      if (!notes.length) return;
+      const t0 = (offsetStep + notes[0][0]) * S, last = notes[notes.length - 1];
+      const tEnd = (offsetStep + last[0] + last[1]) * S + .4;
+      const g = c.createGain(); g.gain.value = 0;
+      const vib = c.createOscillator(); vib.frequency.value = kind === 'h' ? 5.6 : 4.8; const vg = c.createGain(); vg.gain.value = kind === 'h' ? 22 : 12; vib.connect(vg);
+      const oscs = (kind === 'h' ? [['sawtooth', 0], ['sawtooth', 7], ['square', -5]] : [['triangle', 0], ['sine', 1200]]).map(([type, det]) => {
+        const o = c.createOscillator(); o.type = type; o.detune.value = det; vg.connect(o.detune); return o; });
+      let chain;
+      if (kind === 'h') {
+        const hp = c.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 450;
+        const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1500; bp.Q.value = 1.1;
+        const pk = c.createBiquadFilter(); pk.type = 'peaking'; pk.frequency.value = 2700; pk.gain.value = 9; pk.Q.value = 2;
+        oscs.forEach(o => o.connect(hp)); hp.connect(bp).connect(pk).connect(g); chain = .2;
+      } else {
+        const lpf = c.createBiquadFilter(); lpf.type = 'lowpass'; lpf.frequency.value = 3000;
+        oscs.forEach(o => o.connect(lpf)); lpf.connect(g); chain = .34;
+      }
+      g.connect(busLead); g.connect(send);
+      notes.forEach(([st, len, m], i) => {
+        const t = (offsetStep + st) * S, te = t + len * S, f = mtof(m + transpose);
+        oscs.forEach(o => i === 0 ? o.frequency.setValueAtTime(f, t) : o.frequency.setTargetAtTime(f, t, .018));
+        const prevEnd = i ? (offsetStep + notes[i - 1][0] + notes[i - 1][1]) * S : -1;
+        if (Math.abs(prevEnd - t) < .001) g.gain.setTargetAtTime(chain * .55, t - .004, .004);
+        g.gain.setTargetAtTime(chain, t, .012);
+        if (len >= 6) vg.gain.setTargetAtTime(kind === 'h' ? 38 : 20, t + .25, .2), vg.gain.setTargetAtTime(kind === 'h' ? 22 : 12, te, .05);
+        g.gain.setTargetAtTime(0, te - .03, .035);
+        if (kind === 'b') noise(t, len * S * .9, .05, 'bandpass', f, 3, busLead);   // breath
+        if (kind === 'h' && i % 3 === 0 && len <= 2) { // folk grace note flick
+          oscs.forEach(o => { o.frequency.setValueAtTime(f * 1.122, t); o.frequency.setTargetAtTime(f, t + .015, .012); });
+        }
+      });
+      [...oscs, vib].forEach(o => { o.start(Math.max(0, t0 - .05)); o.stop(tEnd); });
+    }
+
+    // notes are created bar by bar, just before each bar renders, so the
+    // browser only ever has a handful of live nodes (keeps rendering fast)
+    const PHRASES = { 0: [A, 0, 'h'], 4: [A, -12, 'b'], 8: [B, 0, 'h'], 12: [A, 0, 'h'] };
+    function scheduleBar(bar) {
+      if (PHRASES[bar]) { const [ph, tr, kind] = PHRASES[bar]; lead(ph, bar * 16, tr, kind); }
+      const root = ROOTS[bar % 4], fill = bar % 4 === 3, last = bar === BARS - 1;
+      for (let s = 0; s < 16; s++) {
+        const t = (bar * 16 + s) * S + (s % 2 ? S * .12 : 0);   // light swing
+        if (KICK.includes(s) && !(last && s > 8)) kick(t);
+        if (SNARE.includes(s)) snare(t);
+        if (s % 2 === 0) hat(t, s % 4 === 0 ? 1 : .6);
+        if (DHOM.includes(s)) dhom(t, s === 0 ? 1 : .8);
+        if (THA.includes(s)) tha(t, s === 15 ? .7 : 1);
+        if (s === 1 || s === 9) tham(t, .7);
+        if (fill && s >= 12) tham(t, .6 + (s - 12) * .12);
+        if (last && s >= 8) { raban(t, .7); raban(t + S / 2, .55); }
+      }
+      RIFF.forEach(([st, len, semi]) => {
+        const t = (bar * 16 + st) * S, f = mtof(root + semi);
+        tone('sine', f, f, t, len * S * .95, .5, busC); tone('square', f, f, t, len * S * .5, .05, busC);
+      });
+      // vinyl crackle baked into the groove, so it reverses with the record too
+      for (let t = bar * 16 * S, te = t + 16 * S; t < te; t += .02 + Math.random() * .25)
+        noise(t, .006 + Math.random() * .01, .05 + Math.random() * .2, 'bandpass', 2000 + Math.random() * 5000, .8, busC);
+    }
+    scheduleBar(0);
+    for (let bar = 1; bar < BARS; bar++)
+      c.suspend(Math.max(0, bar * 16 * S - .1)).then(() => { scheduleBar(bar); c.resume(); });
+
+    return c.startRendering().then(buf => {
+      const L = buf.getChannelData(0), R = buf.getChannelData(1), n = Math.floor(LOOP * sr);
+      const l = new Float32Array(n), r = new Float32Array(n); let peak = 0;
+      for (let i = 0; i < n; i++) { l[i] = L[i]; r[i] = R[i]; }
+      for (let i = n; i < L.length; i++) { l[i - n] += L[i]; r[i - n] += R[i]; }   // fold the tail so the loop is seamless
+      for (let i = 0; i < n; i++) peak = Math.max(peak, Math.abs(l[i]), Math.abs(r[i]));
+      const k = .9 / (peak || 1); for (let i = 0; i < n; i++) { l[i] *= k; r[i] *= k; }
+      return [l, r];
+    });
+  }
+
+  /* ---------- the turntable: plays the track at any speed, either direction ---------- */
+  const WORKLET = `class Deck extends AudioWorkletProcessor{
+    static get parameterDescriptors(){return[{name:'rate',defaultValue:1,automationRate:'a-rate'}]}
+    constructor(){super();this.l=null;this.pos=0;this.k=1;this.port.onmessage=e=>{this.l=e.data.l;this.r=e.data.r;this.k=e.data.sr/sampleRate}}
+    process(_,outs,p){const o=outs[0],a=o[0],b=o[1]||o[0];if(!this.l)return true;const l=this.l,r=this.r,n=l.length,rt=p.rate;
+      for(let i=0;i<a.length;i++){this.pos+=(rt.length>1?rt[i]:rt[0])*this.k;if(this.pos>=n)this.pos-=n;else if(this.pos<0)this.pos+=n;
+        const i0=this.pos|0,f=this.pos-i0,i1=i0+1<n?i0+1:0;a[i]=l[i0]+(l[i1]-l[i0])*f;b[i]=r[i0]+(r[i1]-r[i0])*f}return true}}
+    registerProcessor('deck',Deck);`;
+
+  async function build() {
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -10; comp.ratio.value = 3;
+    master = ctx.createGain(); master.gain.value = 0; master.connect(comp).connect(ctx.destination);
+    const dc = ctx.createBiquadFilter(); dc.type = 'highpass'; dc.frequency.value = 30;   // no thump when the record is held still
+    musicGain = ctx.createGain(); musicGain.gain.value = .85; dc.connect(musicGain).connect(master);
+
+    // a whisper of needle friction under the hand
+    const nb = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate), d = nb.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const sn = ctx.createBufferSource(); sn.buffer = nb; sn.loop = true;
+    scratchBP = ctx.createBiquadFilter(); scratchBP.type = 'bandpass'; scratchBP.Q.value = 2.5; scratchBP.frequency.value = 900;
+    scratchGain = ctx.createGain(); scratchGain.gain.value = 0;
+    sn.connect(scratchBP).connect(scratchGain).connect(master); sn.start();
+
+    const [l, r] = await prerender();
+    if (ctx.audioWorklet) {
+      const url = URL.createObjectURL(new Blob([WORKLET], { type: 'application/javascript' }));
+      await ctx.audioWorklet.addModule(url);
+      deckNode = new AudioWorkletNode(ctx, 'deck', { numberOfInputs: 0, outputChannelCount: [2] });
+      deckNode.port.postMessage({ l: l.slice(), r: r.slice(), sr: SR });
+      rateParam = deckNode.parameters.get('rate');
+      deckNode.connect(dc);
+    } else {   // very old browsers: forward-only fallback
+      const b = ctx.createBuffer(2, l.length, SR); b.copyToChannel(l, 0); b.copyToChannel(r, 1);
+      fallback = ctx.createBufferSource(); fallback.buffer = b; fallback.loop = true; fallback.connect(dc); fallback.start();
+    }
+    ready = true;
+  }
+
+  function label(t) { btn.querySelector('.t').textContent = t; }
+  async function setOn(v) {
+    on = v;
+    btn.setAttribute('aria-pressed', String(v));
+    btn.setAttribute('aria-label', v ? 'Turn sound off' : 'Turn sound on');
+    if (v) {
+      if (!ctx) { label('Loading…'); ctx = true; loading = build(); }
+      await loading;
+      if (!on) return;
+      ctx.resume();
+      master.gain.cancelScheduledValues(ctx.currentTime);
+      master.gain.setTargetAtTime(.9, ctx.currentTime, .25);
+      label('Sound on');
+    } else {
+      label('Sound off');
+      if (ready) master.gain.setTargetAtTime(0, ctx.currentTime, .12);
+    }
+  }
+
+  btn.addEventListener('click', () => { userMuted = on; setOn(!on); });
+
+  return {
+    autoStart() { if (!on && !userMuted) setOn(true); },
+    update(r, dragging) {
+      if (!ready || !on) return;
+      const t = ctx.currentTime, rr = Math.max(-4, Math.min(4, r));
+      if (rateParam) rateParam.setTargetAtTime(rr, t, dragging ? .012 : .03);
+      else fallback.playbackRate.setTargetAtTime(Math.max(.05, Math.abs(rr)), t, .03);
+      const a = Math.abs(rr), jerk = Math.abs(rr - lastRate); lastRate = rr;
+      scratchGain.gain.setTargetAtTime(dragging ? Math.min(.09, a * .025 + jerk * .05) : 0, t, .02);
+      scratchBP.frequency.setTargetAtTime(600 + a * 700, t, .02);
+    }
+  };
+})();
+
 /* vinyl physics */
 const vinyl = document.getElementById('vinyl'), deck = document.getElementById('deck');
 const rpmEl = document.getElementById('rpm'), meter = document.getElementById('meter');
@@ -180,7 +436,7 @@ const ptrAngle = e => { const [cx, cy] = center(); return Math.atan2(e.clientY -
 const wrap = d => ((d + 540) % 360) - 180;
 
 vinyl.addEventListener('pointerdown', e => {
-  dragging = true; vinyl.setPointerCapture(e.pointerId);
+  dragging = true; vinyl.setPointerCapture(e.pointerId); Sound.autoStart();
   lastA = ptrAngle(e); lastT = performance.now(); samples = []; vel = 0;
 });
 vinyl.addEventListener('pointermove', e => {
@@ -198,6 +454,7 @@ const release = () => {
 vinyl.addEventListener('pointerup', release);
 vinyl.addEventListener('pointercancel', release);
 vinyl.addEventListener('keydown', e => {
+  if (e.key.startsWith('Arrow')) Sound.autoStart();
   if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { vel += .6; e.preventDefault(); }
   if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { vel -= .6; e.preventDefault(); }
 });
@@ -220,6 +477,7 @@ function frame(now) {
   meter.style.width = (energy * 100) + '%';
   vinyl.setAttribute('aria-valuenow', Math.min(100, rpm));
   deck.classList.toggle('playing', Math.abs(vel) > 0.05 || dragging);
+  Sound.update(vel / IDLE, dragging);
 
   /* bars react to spin speed */
   const base = 0.12 + energy * 0.75;
