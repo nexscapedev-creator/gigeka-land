@@ -140,21 +140,35 @@ footer b{color:var(--ink)}
   :root{--vs:min(70vh,46vw)}
   .row{flex-wrap:wrap;row-gap:clamp(14px,2.6vh,30px)}
 }
-/* phones: stack, record bleeds off the bottom-right like the poster */
+/* phones & portrait tablets: clean single column, record as the centrepiece */
 @media not all and (min-width:821px) and (min-height:521px) and (min-aspect-ratio:1/1){
-  :root{--vs:min(96vw,680px,125vh)}
-  .top{padding:20px 5vw 0}
-  .badge{width:84px;height:84px}
-  .date{font-size:12px}
-  main{padding-top:3vh;padding-bottom:calc(var(--vs) * .95)}
-  h1{font-size:clamp(2.7rem,13vw,4.6rem)}
-  .row{display:block}
-  .blurb{max-width:none;margin-top:3.5vh}
-  .ticket{margin:3.5vh 0 0}
-  .v{position:absolute;bottom:calc(var(--vs) * -.2);right:calc(var(--vs) * -.24)}
-  .sticker{width:30%;left:0;top:-10%}
-  .readout{top:30%;left:-4%}
-  footer{position:static;display:inline-block;margin-top:22px;font-size:12px}
+  :root{--vs:min(88vw,560px,110vh)}
+  body{display:flex;flex-direction:column}
+  .strip{height:44px}.strip .track{font-size:18px;gap:18px}
+  .top{order:1;align-items:center;padding:16px 6vw 0}
+  .badge{width:58px;height:58px;box-shadow:4px 4px 0 rgba(0,0,0,.22)}
+  .date{display:none}
+  .right{flex-direction:row}
+  .snd{font-size:.8rem;padding:.45em .9em;box-shadow:3px 3px 0 var(--ink)}
+  main,.row{display:contents}
+  h1{order:2;padding:0 6vw;margin-top:5vh;font-size:clamp(2.5rem,12.4vw,4.4rem);line-height:.92}
+  h1 .cook{box-shadow:7px 7px 0 var(--cherry)}
+  .blurb{order:3;padding:0 6vw;margin-top:3.2vh;max-width:34em;font-size:clamp(1rem,4.3vw,1.2rem)}
+  .v{order:4;position:relative;z-index:2;right:auto;bottom:auto;align-self:center;margin:calc(var(--vs) * .3) 0 calc(var(--vs) * .06);flex:none}
+  h1,.blurb,.ticket,footer{position:relative;z-index:4}
+  .sticker{width:26%;left:-4%;top:-12%}
+  .sticker .c{font-size:calc(var(--vs) * .052)}
+  .readout{top:auto;bottom:6%;left:-2%;font-size:12px;padding:4px 11px}
+  .readout .rpm{font-size:17px}
+  .motion{display:none}
+  .ticket{order:5;align-self:flex-start;margin:4vh 6vw 0;box-shadow:6px 6px 0 var(--ink);border-width:3px}
+  .ticket .stub{padding:10px 9px;font-size:12px;border-right-width:3px}
+  .ticket .main{padding:12px 20px}
+  .ticket small{font-size:11px}
+  .ticket strong{font-size:clamp(1.6rem,8vw,2.2rem)}
+  .ticket .cta{font-size:13px}
+  footer{order:6;position:static;align-self:flex-start;margin:3vh 6vw 5vh;font-size:11px}
+  .lights{position:fixed}
 }
 @media (prefers-reduced-motion:reduce){.strip .track,.sticker .ring,.snd .bars i{animation:none}}
 </style>
