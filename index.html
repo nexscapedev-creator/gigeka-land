@@ -38,7 +38,7 @@ a{color:inherit}
 /* top bar */
 .top{position:relative;z-index:6;display:flex;justify-content:space-between;align-items:flex-start;gap:20px;padding:26px 5vw 0}
 .badge{width:118px;height:118px;border-radius:50%;background:var(--ink);display:grid;place-items:center;box-shadow:7px 7px 0 rgba(0,0,0,.22);flex:none}
-.badge img{width:72%}
+.badge img{width:72%;height:auto}
 .right{display:flex;flex-direction:row-reverse;align-items:flex-end;gap:18px;text-align:right}
 @media (max-width:820px){.right{flex-direction:column;gap:12px}}
 .date{font-weight:800;font-size:16px;letter-spacing:.16em;text-transform:uppercase;line-height:1.6}
@@ -121,17 +121,17 @@ footer b{color:var(--ink)}
   :root{--vs:min(78vh,54vw)}
   body{display:flex;flex-direction:column;height:100vh;height:100svh;overflow:hidden}
   .top{padding-top:clamp(14px,2.4vh,28px)}
-  .badge{width:clamp(64px,9.6vh,118px);height:clamp(64px,9.6vh,118px)}
+  .badge{width:clamp(72px,11vh,118px);height:clamp(72px,11vh,118px)}
   main{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:clamp(16px,3.6vh,44px);padding:3vh 0 2.4vh 5vw;max-width:none;width:min(1000px,calc(100vw - var(--vs) * .86))}
-  h1{font-size:clamp(3rem,min(7.4vw,11.6vh),8.4rem)}
+  h1{font-size:clamp(2.6rem,min(6vw,9.4vh),6.4rem)}
   h1 .cook{box-shadow:calc(min(1vw,1.4vh) * .9) calc(min(1vw,1.4vh) * .9) 0 var(--cherry)}
   .row{display:flex;align-items:center;gap:clamp(20px,3vw,48px);margin-top:calc(min(1vw,1.4vh) * 1.2)}
-  .blurb{margin:0;flex:0 1 auto;width:clamp(200px,25vw,440px);min-width:0;font-size:clamp(1.05rem,min(1.55vw,2.7vh),1.5rem)}
+  .blurb{margin:0;flex:0 1 auto;width:clamp(200px,25vw,440px);min-width:0;font-size:clamp(1rem,min(1.45vw,2.5vh),1.35rem)}
   .ticket{margin:0;flex:none}
   .ticket .stub{padding:min(18px,2vh) 14px;font-size:clamp(13px,1.9vh,17px)}
   .ticket .main{padding:min(18px,1.9vh) 26px}
   .ticket small{font-size:clamp(11px,1.6vh,14px)}
-  .ticket strong{font-size:clamp(1.6rem,min(3vw,6vh),3.4rem)}
+  .ticket strong{font-size:clamp(1.5rem,min(2.6vw,5vh),3rem)}
   .ticket .cta{font-size:clamp(12px,1.7vh,16px)}
   footer{position:static;align-self:flex-start;margin:0}
 }
