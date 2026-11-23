@@ -116,22 +116,23 @@ footer{position:fixed;z-index:6;left:5vw;bottom:14px;background:var(--gig);paddi
 footer b{color:var(--ink)}
 
 
-/* desktop: left column always fits the screen height, evenly spaced */
+/* desktop: big headline, paragraph + ticket side by side, all fits the screen */
 @media (min-width:821px){
+  :root{--vs:min(78vh,54vw)}
   body{display:flex;flex-direction:column;height:100vh;height:100svh;overflow:hidden}
-  .top{padding-top:clamp(14px,2.6vh,28px)}
-  .badge{width:clamp(72px,12vh,118px);height:clamp(72px,12vh,118px)}
-  main{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:clamp(14px,3.4vh,40px);padding:1vh 5vw 2.4vh;max-width:min(820px,52vw)}
-  h1{font-size:clamp(2.4rem,min(6vw,8.4vh),6.4rem)}
-  h1 .cook{box-shadow:calc(min(1vw,1.1vh) * .9) calc(min(1vw,1.1vh) * .9) 0 var(--cherry)}
-  .blurb{margin:calc(min(1vw,1.1vh) * 1.2) 0 0;font-size:clamp(.95rem,min(1.5vw,2.3vh),1.35rem);max-width:min(470px,39vw)}
-  .ticket+footer{margin-top:-.6vh}
-  .ticket{margin:0}
-  .ticket .stub{padding:min(18px,1.8vh) 14px;font-size:clamp(12px,1.7vh,16px)}
-  .ticket .main{padding:min(16px,1.6vh) 24px}
-  .ticket small{font-size:clamp(11px,1.5vh,14px)}
-  .ticket strong{font-size:clamp(1.6rem,min(4vw,5.4vh),3.1rem)}
-  .ticket .cta{font-size:clamp(12px,1.6vh,15px)}
+  .top{padding-top:clamp(14px,2.4vh,28px)}
+  .badge{width:clamp(64px,9.6vh,118px);height:clamp(64px,9.6vh,118px)}
+  main{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:clamp(16px,3.6vh,44px);padding:3vh 0 2.4vh 5vw;max-width:none;width:min(1000px,calc(100vw - var(--vs) * .86))}
+  h1{font-size:clamp(3rem,min(7.4vw,11.6vh),8.4rem)}
+  h1 .cook{box-shadow:calc(min(1vw,1.4vh) * .9) calc(min(1vw,1.4vh) * .9) 0 var(--cherry)}
+  .row{display:flex;align-items:center;gap:clamp(20px,3vw,48px);margin-top:calc(min(1vw,1.4vh) * 1.2)}
+  .blurb{margin:0;flex:0 1 auto;width:clamp(200px,25vw,440px);min-width:0;font-size:clamp(1.05rem,min(1.55vw,2.7vh),1.5rem)}
+  .ticket{margin:0;flex:none}
+  .ticket .stub{padding:min(18px,2vh) 14px;font-size:clamp(13px,1.9vh,17px)}
+  .ticket .main{padding:min(18px,1.9vh) 26px}
+  .ticket small{font-size:clamp(11px,1.6vh,14px)}
+  .ticket strong{font-size:clamp(1.6rem,min(3vw,6vh),3.4rem)}
+  .ticket .cta{font-size:clamp(12px,1.7vh,16px)}
   footer{position:static;align-self:flex-start;margin:0}
 }
 /* phones: stack, record bleeds off the bottom-right like the poster */
@@ -142,6 +143,7 @@ footer b{color:var(--ink)}
   .date{font-size:12px}
   main{padding-top:3vh;padding-bottom:calc(var(--vs) * .95)}
   h1{font-size:clamp(2.7rem,13vw,4.6rem)}
+  .row{display:block}
   .blurb{max-width:none;margin-top:3.5vh}
   .ticket{margin:3.5vh 0 0}
   .v{position:absolute;bottom:calc(var(--vs) * -.2);right:calc(var(--vs) * -.24)}
@@ -170,11 +172,13 @@ footer b{color:var(--ink)}
 
 <main>
   <h1>Play with<br>the vinyl<br>till we<br><span class="cook">cook.</span></h1>
+  <div class="row">
   <p class="blurb">Something big for Sri Lanka's live music scene is <u>warming up backstage.</u> Spin the record while we finish it.</p>
   <a class="ticket" href="https://instagram.com/gigeka.lk" target="_blank" rel="noopener">
     <span class="stub">ADMIT ALL</span>
     <span class="main"><small>Follow the drop</small><strong>@gigeka.lk</strong><span class="cta">On Instagram ↗</span></span>
   </a>
+  </div>
   <footer>© <span id="y">2026</span> GigEka · <b>CS-54</b> project</footer>
 </main>
 
