@@ -39,7 +39,8 @@ a{color:inherit}
 .top{position:relative;z-index:6;display:flex;justify-content:space-between;align-items:flex-start;gap:20px;padding:26px 5vw 0}
 .badge{width:118px;height:118px;border-radius:50%;background:var(--ink);display:grid;place-items:center;box-shadow:7px 7px 0 rgba(0,0,0,.22);flex:none}
 .badge img{width:72%;height:auto}
-.right{display:flex;flex-direction:row-reverse;align-items:flex-end;gap:18px;text-align:right}
+.right{display:flex;flex-direction:column;align-items:flex-end;gap:12px;text-align:right}
+@media (min-width:821px) and (min-height:521px) and (min-aspect-ratio:1/1){.right{flex-direction:row-reverse;gap:18px}}
 @media (max-width:820px){.right{flex-direction:column;gap:12px}}
 .date{font-weight:800;font-size:16px;letter-spacing:.16em;text-transform:uppercase;line-height:1.6}
 .date span{display:inline-block;background:var(--ink);color:var(--gig);padding:6px 12px;margin-top:4px}
@@ -117,7 +118,7 @@ footer b{color:var(--ink)}
 
 
 /* desktop: big headline, paragraph + ticket side by side, all fits the screen */
-@media (min-width:821px){
+@media (min-width:821px) and (min-height:521px) and (min-aspect-ratio:1/1){
   :root{--vs:min(78vh,54vw)}
   body{display:flex;flex-direction:column;height:100vh;height:100svh;overflow:hidden}
   .top{padding-top:clamp(14px,2.4vh,28px)}
@@ -135,9 +136,13 @@ footer b{color:var(--ink)}
   .ticket .cta{font-size:clamp(12px,1.7vh,16px)}
   footer{position:static;align-self:flex-start;margin:0}
 }
+@media (min-width:821px) and (min-height:521px) and (min-aspect-ratio:1/1) and (max-aspect-ratio:3/2){
+  :root{--vs:min(70vh,46vw)}
+  .row{flex-wrap:wrap;row-gap:clamp(14px,2.6vh,30px)}
+}
 /* phones: stack, record bleeds off the bottom-right like the poster */
-@media (max-width:820px){
-  :root{--vs:96vw}
+@media not all and (min-width:821px) and (min-height:521px) and (min-aspect-ratio:1/1){
+  :root{--vs:min(96vw,680px,125vh)}
   .top{padding:20px 5vw 0}
   .badge{width:84px;height:84px}
   .date{font-size:12px}
