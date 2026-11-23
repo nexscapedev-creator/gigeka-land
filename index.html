@@ -235,7 +235,7 @@ html[data-theme="light"] .thm .sun,html:not([data-theme="light"]) .thm .moon{dis
 <div class="top">
   <div class="badge"><img src="logo.webp" alt="GigEka" width="85" height="58"></div>
   <div class="right">
-    <div class="date">Sri Lanka · Live music<br><span>Coming to the stage</span></div>
+    <div class="date">Sri Lanka · First pressing<br><span>Stay tuned</span></div>
     <div class="btns">
     <button class="snd thm" id="thm" type="button" aria-label="Switch to light mode">
       <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>
@@ -252,13 +252,13 @@ html[data-theme="light"] .thm .sun,html:not([data-theme="light"]) .thm .moon{dis
 <main>
   <h1>Play with<br>the vinyl<br>till we<br><span class="cook">cook.</span></h1>
   <div class="row">
-  <p class="blurb">Something big for Sri Lanka's live music scene is <u>warming up backstage.</u> Spin the record while we finish it.</p>
+  <p class="blurb">Sri Lanka has never booked talent like this. We are pressing a limited first run, <u>and the guest list hears it first.</u> Stay tuned.</p>
   <a class="ticket" href="https://instagram.com/gigeka.lk" target="_blank" rel="noopener">
-    <span class="stub">ADMIT ALL</span>
-    <span class="main"><small>Follow the drop</small><strong>@gigeka.lk</strong><span class="cta">On Instagram ↗</span></span>
+    <span class="stub">INVITE ONLY</span>
+    <span class="main"><small>Join the guest list</small><strong>@gigeka.lk</strong><span class="cta">On Instagram ↗</span></span>
   </a>
   </div>
-  <footer>© <span id="y">2026</span> GigEka · <b>CS-54</b> project</footer>
+  <footer>© <span id="y">2026</span> GigEka · A venture by <b><a href="https://nexscape.dev" target="_blank" rel="noopener" style="text-decoration:none">Nexscape</a></b></footer>
 </main>
 
 <div class="v" id="deck">
@@ -298,7 +298,7 @@ html[data-theme="light"] .thm .sun,html:not([data-theme="light"]) .thm .moon{dis
     try { localStorage.setItem('gigeka-theme', r.dataset.theme || 'dark'); } catch (_) {} sync(); });
   sync(); }
 
-{ const t = document.getElementById('track'); const one = '<span>GIGEKA</span><b>✦</b><span>SRI LANKA</span><b>✦</b><span>LIVE MUSIC</span><b>✦</b>'; t.innerHTML = one.repeat(12); }
+{ const t = document.getElementById('track'); const one = '<span>GIGEKA</span><b>✦</b><span>INVITE ONLY</span><b>✦</b><span>LIMITED FIRST PRESSING</span><b>✦</b><span>STAY TUNED</span><b>✦</b>'; t.innerHTML = one.repeat(8); }
 document.getElementById('y').textContent = new Date().getFullYear();
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
