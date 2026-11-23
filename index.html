@@ -269,7 +269,10 @@ const Sound = (() => {
     }
   }
 
-  btn.addEventListener('click', () => { userMuted = on; setOn(!on); });
+  btn.addEventListener('click', e => { e.stopPropagation(); userMuted = on; setOn(!on); });
+  // browsers block sound until the visitor interacts, so the music starts on the first tap, click or key press anywhere
+  const kick = e => { if (e.target.closest && e.target.closest('#snd')) return; if (!on && !userMuted) setOn(true); ['pointerdown', 'touchend', 'keydown'].forEach(ev => removeEventListener(ev, kick, true)); };
+  ['pointerdown', 'touchend', 'keydown'].forEach(ev => addEventListener(ev, kick, true));
 
   return {
     autoStart() { if (!on && !userMuted) setOn(true); },
