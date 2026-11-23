@@ -10,7 +10,7 @@
 <meta property="og:description" content="Something new for Sri Lanka's live music scene is on the way.">
 <meta property="og:image" content="og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#FECD04">
+<meta name="theme-color" content="#F6F1E6">
 <link rel="icon" href="favicon.png" type="image/png"><link rel="apple-touch-icon" href="favicon.png">
 <link rel="preload" href="assets/fonts/bowlby-one-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
@@ -171,6 +171,20 @@ footer b{color:var(--ink)}
   .lights{position:fixed}
 }
 @media (prefers-reduced-motion:reduce){.strip .track,.sticker .ring,.snd .bars i{animation:none}}
+
+/* ---- white / cream theme ---- */
+:root{--gig:#F7CB2D;--paper:#FFFDF7}
+body{background:#F6F1E6}
+.half{background-image:radial-gradient(rgba(0,0,0,.09) 30%,transparent 33%)}
+.grain{opacity:.22}
+.ticket{background:#FFFDF7}
+.vinyl .lbl{background:#F7CB2D}
+.vinyl .hole{background:#F6F1E6}
+footer{background:#F6F1E6}
+.lights .dim{display:none}
+.lights .beam{background:linear-gradient(rgba(247,203,45,calc(.06 + var(--e) * .22)),transparent 72%);mix-blend-mode:multiply}
+.lights .glow{background:radial-gradient(circle,rgba(247,203,45,calc(.08 + var(--e) * .3)) 0,transparent 66%);mix-blend-mode:multiply}
+.lights .flash{display:none}
 </style>
 </head>
 <body>
